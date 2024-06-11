@@ -7,7 +7,7 @@ import inflect
 
 p = inflect.engine()
 
-csv_file_path = '/Users/aliseyhan/Desktop/finaldata/reduced_dataset.csv'
+csv_file_path = '' #csv file path
 data = pd.read_csv(csv_file_path)
 
 
@@ -87,7 +87,7 @@ print(f"Number of unique ProductId values: {data['ProductId'].nunique()}")
 
 config = {
     'user': 'root',
-    'password': '19831978.Ali',
+    'password': '', #your database password
     'host': 'localhost',
     'database': 'chem_cosmetics',
     'raise_on_warnings': True
