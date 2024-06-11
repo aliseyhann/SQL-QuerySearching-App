@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Database Project</title>
+    <style>
+        * {
+            font-family: Verdana, Geneva, Tahoma, sans-serif;
+            background-color: #000000;
+        }
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            justify-content: start;
+            height: 100vh;
+            margin: 0;
+            background-image: url('images/monochrome-beauty-product-skincare_23-2151307296.avif'); /* Burada görüntü yolunu ayarlayın */
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-attachment: scroll; 
+        }
+        h1, h2 {
+            max-width: 800px;
+            display: block;
+            text-align: center;
+            justify-content: center;
+            margin-bottom: 30px;
+            color: rgb(255, 255, 255);
+        }
+        p {
+            max-width: 800px;
+            display: block;
+            text-align: center;
+            justify-content: center;
+            margin-bottom: 30px;
+            color: rgb(255, 255, 255);
+        }
+        .container {
+            text-align: center;
+        }
+        label {
+            display: block;
+            margin-bottom: 30px;
+            color: rgb(255, 255, 255);
+        }
+        textarea, button, p {
+            color: rgb(255, 255, 255);
+            width: 100%;
+            max-width: 600px;
+            margin-bottom: 20px;
+        }
+        textarea {
+            height: 100px;
+        }
+        button {
+            padding: 5px 10px;
+            font-size: 14px;
+            display: center;
+            justify-content: center;
+        }
+        .history, .info, .example-queries {
+            margin-top: 20px;
+            max-width: 800px;
+            width: 100%;
+            text-align: center;
+        }
+        #query-history li {
+            color: rgb(255, 255, 255); 
+        }
+        .results-container {
+            max-width: 800px;
+            height: 400px;
+            margin-bottom: 200px;
+            overflow-y: scroll;
+            margin: 25px 0;
+            box-shadow: 0 0 20px rgb(255, 255, 255);
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9em;
+            border-radius: 5px 5px 0 0;
+            overflow: hidden;
+        }
+        th, td {
+            border: 1px solid #000000;
+            text-align: left;
+            background-color: #ffffff;
+        }
+        th {
+            background-color: #da351f;
+        }
+        ul {
+            list-style-type: none;
+        }
+        li {
+            padding: 5px 0;
+        }
+        .query-buttons {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container active">
+        <h1>SE 2006 Fundamentals of Database Systems</h1>
+        <div class="info">
+            <h2>Chemicals in Cosmetics CSV File Information</h2>
+            <p>         This dataset contains detailed product information including names, categories, chemical properties, and more. Below are some example queries to help you get started with querying this database.</p>
+        </div>
+        <form id="query-form">
+            <label for="query">Query App</label>
+            <textarea id="query" name="query" placeholder="Please enter a query; SELECT * FROM your_table_name" required></textarea><br>
+            <button type="submit">Run</button>
+        </form>
+        <div class="example-queries">
+            <h2>Example Queries</h2>
+            <div class="query-buttons">
+                <button onclick="document.getElementById('query').value='SELECT * FROM products WHERE ProductRating > 4;'">Highly Rated Products</button>
+                <button onclick="document.getElementById('query').value='SELECT * FROM Products LIMIT 1000;'">Products</button>
+                <button onclick="document.getElementById('query').value='SELECT DISTINCT TargetDemographic, ProductName From Demographic, Products Where TargetDemographic LIKE \'%Adults%\' LIMIT 100;'">Products for adults in the dataset. </button>
+                <button onclick="document.getElementById('query').value='SELECT DayNightUsage, TargetDemographic FROM UsageInfo, Demographic WHERE TargetDemographic LIKE \'%Teens%\' LIMIT 100;'">List day and night usage info for teens.</button>
+                <button onclick="document.getElementById('query').value='SELECT ProductName, MaxUsageDuration FROM UsageInfo, Products LIMIT 100;'">List products name with MaxUsageDuration</button>
+                <button onclick="document.getElementById('query').value='SELECT ChemicalName, ChemicalDateRemoved FROM Chemicals WHERE ChemicalDateRemoved IS NOT NULL;'">List chemicals that have been discontinued</button>
+                <button onclick="document.getElementById('query').value='SELECT ProductName, CDPHId FROM Products, CDPH WHERE ProductName LIKE \'%CoverGirl Jumbo Gloss Balm Creams%\';'">List brand name that product name is CoverGirl Jumbo Gloss Balm Creams</button>
+                <button onclick="document.getElementById('query').value='SELECT CompanyName, ProductId FROM Companies, Products WHERE ProductId < 2 LIMIT 500;'">List companies where product id smaller than 2</button>
+                <button onclick="document.getElementById('query').value='SELECT DISTINCT ProductName, CompanyId FROM Products, Companies WHERE CompanyId < 200 LIMIT 100;'">List all products produced by the company with CompanyId < 200</button>
+                <button onclick="document.getElementById('query').value='SELECT ProductName, BrandName FROM Products WHERE ProductName LIKE \'%lotion%\';'">Search for products with 'lotion' in the product name</button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="history">
+        <h2>Query History</h2>
+        <ul id="query-history"></ul>
+    </div>
+    
+    <div class="page" id="results-page">
+        <div class="results-container">
+            <table id="data-table">
+                <thead>
+                    <tr id="table-headers"></tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+        <button id="back-button">Back</button>
+    </div>
+    
+    <script>
+        document.getElementById('query-form').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const query = document.getElementById('query').value;
+            
+            fetch('http://localhost:3000/execute-query', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ query: query })
+            })
+            .then(response => response.json())
+            .then(data => {
+                const dataTable = document.getElementById('data-table');
+                const headerRow = document.getElementById('table-headers');
+                const tbody = dataTable.getElementsByTagName('tbody')[0];
+                
+                headerRow.innerHTML = '';
+                tbody.innerHTML = '';
+
+                if (data.error) {
+                    alert('Error: ' + data.error);
+                    return;
+                }
+
+                if (data.length === 0) {
+                    alert('No results returned from the query.');
+                    return;
+                }
+
+                const headers = Object.keys(data[0]);
+                headers.forEach(header => {
+                    const th = document.createElement('th');
+                    th.textContent = header;
+                    headerRow.appendChild(th);
+                });
+
+                data.forEach(item => {
+                    const row = tbody.insertRow();
+                    headers.forEach(header => {
+                        const cell = row.insertCell();
+                        cell.textContent = item[header];
+                    });
+                });
+
+                document.querySelector('.container').classList.remove('active');
+                document.getElementById('results-page').classList.add('active');
+
+                const historyList = document.getElementById('query-history');
+                const listItem = document.createElement('li');
+                listItem.textContent = query;
+                historyList.appendChild(listItem);
+            })
+            .catch(error => console.error('Error:', error));
+        });
+
+        document.getElementById('back-button').addEventListener('click', function() {
+            document.getElementById('results-page').classList.remove('active');
+            document.querySelector('.container').classList.add('active');
+        });
+
+        document.querySelector('.container').classList.add('active');
+    </script>
+</body>
+</html>
