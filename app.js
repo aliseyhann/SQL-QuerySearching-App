@@ -15,7 +15,7 @@ app.post('/execute-query', (req, res) => {
     const connection = mysql.createConnection({
         host: 'localhost',
         user: 'root',
-        password: '19831978.Ali',
+        password: '', //your database password
         database: 'chem_cosmetics'
     });
 
